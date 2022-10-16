@@ -4,7 +4,7 @@
 
 function createnic {
 
-$global:nicVM1 = New-AzNetworkInterface -ResourceGroupName $rgName -Location $location -Name 'nicVM1' -PublicIpAddress $pip1 -NetworkSecurityGroup $nsg1 -Subnet $frontendsubnet -LoadBalancerBackendAddressPool $bepool
+$global:nicVM1 = New-AzNetworkInterface -ResourceGroupName $rgName -Location $location -Name 'nicVM1' -PublicIpAddress $pip1 -NetworkSecurityGroup $nsg1 -Subnet $frontendsubnet -LoadBalancerBackendAddressPool $backendpool
 
 $global:nicVM2 = New-AzNetworkInterface -ResourceGroupName $rgName -Location $location -Name 'nicVM2' -PublicIpAddress $pip2 -NetworkSecurityGroup $nsg2 -Subnet $backendsubnet
 }
@@ -26,7 +26,7 @@ $global:vm2 = New-AzVM -ResourceGroupName $rgName -Location $location -VM $vmCon
 
 function installIIS {
 
-$ext = @{
+$vmExtension = @{
     Publisher = 'Microsoft.Compute'
     ExtensionType = 'CustomScriptExtension'
     ExtensionName = 'IIS'
@@ -36,6 +36,6 @@ $ext = @{
     TypeHandlerVersion = '1.8'
     SettingString = '{"commandToExecute":"powershell Add-WindowsFeature Web-Server; powershell Add-Content -Path \"C:\\inetpub\\wwwroot\\Default.htm\" -Value $($env:computername)"}'
 }
-Set-AzVMExtension @ext -AsJob
+Set-AzVMExtension @vmExtension -AsJob
 
 }

@@ -39,15 +39,15 @@ $pip2 = New-AzPublicIpAddress -Name "pip2" -ResourceGroupName "$rgName" -Locatio
 
 $pip3 = New-AzPublicIpAddress -Name "pip3" -ResourceGroupName "$rgName" -Location $location -AllocationMethod Static -Sku Standard
 
-$feip = New-AzLoadBalancerFrontendIpConfig -Name "myFrontEnd" -PublicIpAddressId "/subscriptions/964df7ca-3ba4-48b6-a695-1ed9db5723f8/resourceGroups/1-a4f2a064-playground-sandbox/providers/Microsoft.Network/publicIPAddresses/pip3"
-$bepool = New-AzLoadBalancerBackendAddressPoolConfig -Name 'myBackEndPool'
+$frontendip = New-AzLoadBalancerFrontendIpConfig -Name "myFrontEnd" -PublicIpAddressId "/subscriptions/964df7ca-3ba4-48b6-a695-1ed9db5723f8/resourceGroups/1-a4f2a064-playground-sandbox/providers/Microsoft.Network/publicIPAddresses/pip3"
+$backendpool = New-AzLoadBalancerBackendAddressPoolConfig -Name 'myBackEndPool'
 
 $healthprobe = New-AzLoadBalancerProbeConfig -Name 'myHealthProbe' -Protocol 'tcp' -Port '80' -IntervalInSeconds '360' -ProbeCount '5' 
 
-$rule = New-AzLoadBalancerRuleConfig -Name 'myHTTPRule' -Protocol 'tcp' -FrontendPort '80' -BackendPort '80' -IdleTimeoutInMinutes '15' -FrontendIpConfiguration $feip -BackendAddressPool $bepool -EnableTcpReset -DisableOutboundSNAT
+$rule = New-AzLoadBalancerRuleConfig -Name 'myHTTPRule' -Protocol 'tcp' -FrontendPort '80' -BackendPort '80' -IdleTimeoutInMinutes '15' -FrontendIpConfiguration $frontendip -BackendAddressPool $backendpool -EnableTcpReset -DisableOutboundSNAT
 
 
-New-AzLoadBalancer -ResourceGroupName $rgName -Name 'myLoadBalancer' -Location $location -Sku 'Standard' -FrontendIpConfiguration $feip -BackendAddressPool $bePool -LoadBalancingRule $rule -Probe $healthprobe
+New-AzLoadBalancer -ResourceGroupName $rgName -Name 'myLoadBalancer' -Location $location -Sku 'Standard' -FrontendIpConfiguration $frontendip -BackendAddressPool $backendpool -LoadBalancingRule $rule -Probe $healthprobe
 
 
 
@@ -92,7 +92,7 @@ Set-AzVirtualNetworkSubnetConfig -VirtualNetwork $vnet -Name 'Subnet2' -AddressP
 
 #Create NIC for VM's
 
-$nicVM1 = New-AzNetworkInterface -ResourceGroupName $rgName -Location $location -Name 'nicVM1' -PublicIpAddress $pip1 -NetworkSecurityGroup $nsg1 -Subnet $frontendsubnet -LoadBalancerBackendAddressPool $bepool
+$nicVM1 = New-AzNetworkInterface -ResourceGroupName $rgName -Location $location -Name 'nicVM1' -PublicIpAddress $pip1 -NetworkSecurityGroup $nsg1 -Subnet $frontendsubnet -LoadBalancerBackendAddressPool $backendpool
 
 $nicVM2 = New-AzNetworkInterface -ResourceGroupName $rgName -Location $location -Name 'nicVM2' -PublicIpAddress $pip2 -NetworkSecurityGroup $nsg2 -Subnet $backendsubnet
 
@@ -111,7 +111,7 @@ $vm2 = New-AzVM -ResourceGroupName $rgName -Location $location -VM $vmConfig
 
 #Install IIS to view URL via Port 80 through Load Balancer Public IP
 
-$ext = @{
+$vmExtension = @{
     Publisher = 'Microsoft.Compute'
     ExtensionType = 'CustomScriptExtension'
     ExtensionName = 'IIS'
@@ -121,7 +121,7 @@ $ext = @{
     TypeHandlerVersion = '1.8'
     SettingString = '{"commandToExecute":"powershell Add-WindowsFeature Web-Server; powershell Add-Content -Path \"C:\\inetpub\\wwwroot\\Default.htm\" -Value $($env:computername)"}'
 }
-Set-AzVMExtension @ext -AsJob
+Set-AzVMExtension @vmExtension -AsJob
 
 
 

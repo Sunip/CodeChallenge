@@ -24,14 +24,14 @@ $a = Get-AzPublicIpAddress -Name "pip3" -ResourceGroupName "$rgName"
 
 $global:Id = $a.Id
 
-$global:feip = New-AzLoadBalancerFrontendIpConfig -Name "myFrontEnd" -PublicIpAddressId "$Id"
-$global:bepool = New-AzLoadBalancerBackendAddressPoolConfig -Name 'myBackEndPool'
+$global:frontendip = New-AzLoadBalancerFrontendIpConfig -Name "myFrontEnd" -PublicIpAddressId "$Id"
+$global:backendpool = New-AzLoadBalancerBackendAddressPoolConfig -Name 'myBackEndPool'
 
-$global:healthprobe = New-AzLoadBalancerProbeConfig -Name 'myHealthProbe' -Protocol 'tcp' -Port '80' -IntervalInSeconds '360' -ProbeCount '5' 
+$global:healthprobe = New-AzLoadBalancerProbeConfig -Name 'myHealthProbe' -Protocol 'tcp' -Port '80' -IntervalInSeconds '60' -ProbeCount '5' 
 
-$global:rule = New-AzLoadBalancerRuleConfig -Name 'myHTTPRule' -Protocol 'tcp' -FrontendPort '80' -BackendPort '80' -IdleTimeoutInMinutes '15' -FrontendIpConfiguration $feip -BackendAddressPool $bepool -EnableTcpReset -DisableOutboundSNAT
+$global:rule = New-AzLoadBalancerRuleConfig -Name 'myHTTPRule' -Protocol 'tcp' -FrontendPort '80' -BackendPort '80' -IdleTimeoutInMinutes '15' -FrontendIpConfiguration $frontendip -BackendAddressPool $backendpool -LoadDistribution Default
 
 
-New-AzLoadBalancer -ResourceGroupName $rgName -Name 'myLoadBalancer' -Location $location -Sku 'Standard' -FrontendIpConfiguration $feip -BackendAddressPool $bePool -LoadBalancingRule $rule -Probe $healthprobe
+New-AzLoadBalancer -ResourceGroupName $rgName -Name 'myLoadBalancer' -Location $location -Sku 'Standard' -FrontendIpConfiguration $frontendip -BackendAddressPool $backendpool -LoadBalancingRule $rule -Probe $healthprobe
 
  }
